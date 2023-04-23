@@ -1,0 +1,8 @@
+// - same capabilities as the original, but more generic so that we can do fancy
+//     syntax error handling.
+// - support for comments
+// - support for "IF" statements that can query variables from game state
+// - support for "SET" statements that can set variables in game state
+//   - Numbers, strings, and booleans are supported
+// - support for simple string templating (e.g. "Hello, ${name}!")
+// - support for "TRIGGER" statements that can trigger pre-defined callbacks

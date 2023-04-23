@@ -1,0 +1,39 @@
+Marker = { "%" ~ MarkerName ~ "%" }
+StartMarker = { "%START%" }
+EndMarker = { "%END%" }
+MarkerName = { (ASCII_ALPHA_UPPER | ASCII_DIGIT | "-")+ }
+
+Char = { LETTER | NUMBER | PUNCTUATION | SYMBOL | SPACE_SEPARATOR }
+Text = @{ Char+ }
+Subject = @{ SubjectChar+ }
+SubjectChar = { !" SAY " ~ Char }
+
+Space = _{ " " }
+
+GotoCommand = { "GOTO" ~ Space ~ Marker }
+ChoiceCommand = { "CHOICE" ~ Space ~ Text }
+InfixSayCommand = { Subject ~ Space ~ "SAY" ~ Space ~ Text }
+PostfixSayCommand = { "SAY" ~ Space ~ Text }
+SayCommand = { InfixSayCommand | PostfixSayCommand }
+
+StartOfScript = { SOI ~ StartMarker ~ NEWLINE }
+EndOfScript = { EndMarker ~ NEWLINE* ~ EOI }
+Line = {
+    // Lines start with a command
+    (Marker | SayCommand | ChoiceCommand | GotoCommand) ~
+    // Followed by one or more newlines
+    NEWLINE+ ~
+    // And optionally followed by indented blocks
+    IndentedBlock*
+}
+
+IndentedBlock = {
+    // The first line in the block
+    PEEK_ALL ~ PUSH("    "+ | "\t"+) ~ Line ~
+    // Subsequent lines in the block
+    (PEEK_ALL ~ Line)* ~
+    // Remove the last layer of indentation from the stack when exiting the block
+    DROP
+}
+
+Script = { StartOfScript ~ (!EndMarker ~ Line)+ ~ EndOfScript }
