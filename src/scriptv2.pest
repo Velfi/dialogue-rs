@@ -1,13 +1,3 @@
-// - same capabilities as the original, but more generic so that we can do fancy
-//     syntax error handling.
-// - support for comments
-// - support for "IF" statements that can query variables from game state
-// - support for "SET" statements that can set variables in game state
-//   - Numbers, strings, and booleans are supported
-// - support for simple string templating (e.g. "Hello, ${name}!")
-// - support for "TRIGGER" statements that can trigger pre-defined callbacks
-
-// Basically, everything except for "|" is allowed, since we use pipes to denote commands.
 AllowedSymbols = {
     "!" | "@" | "#" | "$" | "%" | "^" | "&" | "*" | "(" | ")" |
     "{" | "}" | "[" | "]" | ";" | ":" | "'" | "\"" | "," | "." |
@@ -20,7 +10,7 @@ Text = @{ Char+ }
 Space = _{ " " }
 
 Percent = _{ "%" }
-Marker = { Percent ~ MarkerName ~ Percent }
+Marker = @{ Percent ~ MarkerName ~ Percent }
 MarkerName = { (ASCII_ALPHA_UPPER | ASCII_DIGIT | "-")+ }
 
 CommentStart = _{ "//" }
@@ -30,18 +20,15 @@ Command = { Text? ~ Space* ~ CommandName ~ Space* ~ Text }
 Bar = _{ "|" }
 CommandName = { Bar ~ (ASCII_ALPHA_UPPER | "-")+ ~ Bar }
 
-Line = {
-    (Marker | Command | Comment) ~
-    NEWLINE+
-}
+Line = @{ (Marker | Command | Comment) ~ NEWLINE }
 
 Block = {
     // The first line in the block
-    PEEK_ALL ~ PUSH("    "+ | "\t"+) ~ (Block | Line) ~
+    PEEK_ALL ~ PUSH("    ") ~ Line ~
     // Subsequent lines in the block
-    (PEEK_ALL ~ (Block | Line))* ~
+    (Block | (PEEK_ALL ~ Line)?) ~
     // Remove the last layer of indentation from the stack when exiting the block
-    DROP
+    DROP ~ NEWLINE*
 }
 
-Script = { SOI ~ Block* ~ EOI }
+Script = { SOI ~ (Block | Line)* ~ NEWLINE* ~ EOI }
