@@ -8,9 +8,6 @@ use pest_derive::Parser;
 #[grammar = "script.pest"]
 pub struct ScriptParser;
 
-// TODO I don't think I need to do this
-pub use Rule as ParserRule;
-
 impl fmt::Display for Rule {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.as_str())

@@ -59,8 +59,8 @@ mod tests {
 
     #[test]
     fn test_parse_block_of_say_commands() {
-        let mut pairs = ScriptParser::parse(Rule::IndentedBlock, SAY_COMMANDS)
-            .expect("input is a valid script");
+        let mut pairs =
+            ScriptParser::parse(Rule::Block, SAY_COMMANDS).expect("input is a valid script");
 
         let pair = &pairs.next().expect("a pair exists");
         assert_eq!(pairs.next(), None, "no other pairs exist");
@@ -93,7 +93,7 @@ mod tests {
 
     // #[test]
     // fn test_parse_choices() {
-    //     let mut pairs = ScriptParser::parse(Rule::IndentedBlock, CHOICE_COMMANDS)
+    //     let mut pairs = ScriptParser::parse(Rule::Block, CHOICE_COMMANDS)
     //         .expect("input is a valid script");
 
     //     let pair = &pairs.next().expect("a pair exists");
