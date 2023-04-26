@@ -13,7 +13,6 @@ pub enum Line {
     Command(Command),
     Comment(Comment),
     Marker(Marker),
-    BlankLine,
 }
 
 impl fmt::Display for Line {
@@ -22,7 +21,6 @@ impl fmt::Display for Line {
             Self::Command(command) => writeln!(f, "{command}"),
             Self::Comment(comment) => writeln!(f, "{comment}"),
             Self::Marker(marker) => writeln!(f, "{marker}"),
-            Self::BlankLine => writeln!(f),
         }
     }
 }
@@ -46,10 +44,6 @@ impl From<Marker> for Line {
 }
 
 impl Line {
-    pub fn blank_line() -> Self {
-        Self::BlankLine
-    }
-
     pub fn command(command: Command) -> Self {
         Self::Command(command)
     }

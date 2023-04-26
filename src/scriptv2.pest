@@ -3,32 +3,28 @@ AllowedSymbols = {
     "{" | "}" | "[" | "]" | ";" | ":" | "'" | "\"" | "," | "." |
     "<" | ">" | "/" | "?" | "\\" | "`" | "~" | "-" | "_" | "=" | "+" 
 }
-Char = { LETTER | NUMBER | PUNCTUATION | SPACE_SEPARATOR | AllowedSymbols }
-Text = @{ Char+ }
+Char = { (LETTER | NUMBER | PUNCTUATION | AllowedSymbols) }
+Text = @{ (Char | SPACE_SEPARATOR)+ }
 
-// TODO I don't think this is doing anything at this point. Can it be removed?
-Space = _{ " " }
+Marker = { "%" ~ MarkerName ~ "%" }
+MarkerName = @{ (ASCII_ALPHA_UPPER | ASCII_DIGIT | "-")+ }
 
-Percent = _{ "%" }
-Marker = @{ Percent ~ MarkerName ~ Percent }
-MarkerName = { (ASCII_ALPHA_UPPER | ASCII_DIGIT | "-")+ }
+Comment = { SPACE_SEPARATOR* ~ "//" ~ SPACE_SEPARATOR* ~ Text ~ NEWLINE }
 
-CommentStart = _{ "//" }
-Comment = { CommentStart ~ Space* ~ Text* }
+Prefix = @{ (!(" |") ~ (Char | SPACE_SEPARATOR))+ }
+Command = { (Prefix ~ " ")? ~ "|" ~ CommandName ~ "|" ~ SPACE_SEPARATOR ~ Text }
+CommandName = @{ (ASCII_ALPHA_UPPER | "-")+ }
 
-Command = { Text? ~ Space* ~ CommandName ~ Space* ~ Text }
-Bar = _{ "|" }
-CommandName = { Bar ~ (ASCII_ALPHA_UPPER | "-")+ ~ Bar }
-
-Line = @{ (Marker | Command | Comment) ~ NEWLINE }
+Line = { (Marker | Command) ~ NEWLINE }
 
 Block = {
+	Comment? ~ 
     // The first line in the block
     PEEK_ALL ~ PUSH("    ") ~ Line ~
     // Subsequent lines in the block
-    (Block | (PEEK_ALL ~ Line)?) ~
+    (Block | (PEEK_ALL ~ Line)*) ~
     // Remove the last layer of indentation from the stack when exiting the block
     DROP ~ NEWLINE*
 }
 
-Script = { SOI ~ (Block | Line)* ~ NEWLINE* ~ EOI }
+Script = { SOI ~ (Block | Line | Comment)* ~ NEWLINE* }

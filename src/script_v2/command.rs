@@ -54,13 +54,17 @@ impl Command {
                             .to_owned(),
                     );
                 }
-                Rule::Text if command_name.is_none() => {
+                Rule::Prefix => {
+                    if pair.as_str().trim().is_empty() {
+                        continue;
+                    }
+
                     prefix = Some(pair.as_str().trim().to_owned());
                 }
-                Rule::Text if command_name.is_some() => {
+                Rule::Text => {
                     suffix = Some(pair.as_str().trim().to_owned());
                 }
-                _ => unreachable!(),
+                _ => unreachable!("hit unexpected pair: {pair}"),
             }
         }
 

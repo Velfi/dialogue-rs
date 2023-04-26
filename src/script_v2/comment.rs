@@ -10,7 +10,7 @@ pub struct Comment {
 
 impl fmt::Display for Comment {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "// {}", self.text)
+        writeln!(f, "// {}", self.text)
     }
 }
 
@@ -38,13 +38,13 @@ mod tests {
 
     #[test]
     fn test_comment_parse() {
-        let comment = Comment::parse("// This is a comment").unwrap();
+        let comment = Comment::parse("// This is a comment\n").unwrap();
         assert_eq!(comment.text, "This is a comment");
     }
 
     #[test]
     fn test_round_trip() {
-        let comment = Comment::parse("// This is a comment").unwrap();
+        let comment = Comment::parse("// This is a comment\n").unwrap();
         assert_eq!(comment.to_string(), "// This is a comment");
     }
 }
