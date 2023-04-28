@@ -1,8 +1,16 @@
+//! # Markers
+//!
+//! A script must start with a `%START%` marker and end with a `%END%` marker which determine the start and
+//! end of the script, respectively. Markers are written in ALL-CAPS-KEBAB-CASE and delimited by percent
+//! symbols. By using the [|GOTO| command], the flow of dialogue can be
+//! redirected to just after a marker.
+
 use crate::script::parser::Rule;
 use anyhow::bail;
 use pest::iterators::Pair;
 use std::{borrow::Cow, fmt};
 
+/// A marker that can be used as a destination for `GOTO` commands.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Marker(Cow<'static, str>);
 
@@ -13,16 +21,19 @@ impl fmt::Display for Marker {
 }
 
 impl Marker {
+    /// Get the name of the marker.
     pub fn name(&self) -> &str {
         &self.0
     }
 }
 
 impl Marker {
+    /// Create a new `Marker` from a string.
     pub fn new<T: Into<Cow<'static, str>>>(name: T) -> Self {
         Self(name.into())
     }
 
+    /// Parse a `Marker` from a string.
     pub fn parse(marker_str: &str) -> Result<Self, anyhow::Error> {
         let marker = marker_str.trim_start_matches('%').trim_end_matches('%');
         Ok(Self(marker.to_owned().into()))
@@ -32,7 +43,7 @@ impl Marker {
 impl TryFrom<Pair<'_, Rule>> for Marker {
     type Error = anyhow::Error;
 
-    fn try_from(pair: Pair<Rule>) -> Result<Self, Self::Error> {
+    fn try_from(pair: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         match pair.as_rule() {
             Rule::Marker => Marker::parse(pair.as_str()),
             _ => bail!("Pair is not a marker: {:#?}", pair),

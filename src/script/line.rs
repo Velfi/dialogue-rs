@@ -1,6 +1,10 @@
+//! # Lines
+//! 
+//! Lines in a script are either [Markers](#Markers) or [Commands](#Commands). They can include any letters
+//! or symbols, except for pipes _(&nbsp;|&nbsp;)_, as those are used to delimit commands.
+
 use crate::script::{
     command::Command,
-    comment::Comment,
     marker::Marker,
     parser::{Parser, Rule},
 };
@@ -8,10 +12,12 @@ use anyhow::bail;
 use pest::{iterators::Pair, Parser as PestParser};
 use std::fmt;
 
+/// A line in a script.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub enum Line {
+    /// A [Command].
     Command(Command),
-    Comment(Comment),
+    /// A [Marker].
     Marker(Marker),
 }
 
@@ -19,7 +25,6 @@ impl fmt::Display for Line {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Command(command) => writeln!(f, "{command}"),
-            Self::Comment(comment) => writeln!(f, "{comment}"),
             Self::Marker(marker) => writeln!(f, "{marker}"),
         }
     }
@@ -31,12 +36,6 @@ impl From<Command> for Line {
     }
 }
 
-impl From<Comment> for Line {
-    fn from(comment: Comment) -> Self {
-        Self::Comment(comment)
-    }
-}
-
 impl From<Marker> for Line {
     fn from(marker: Marker) -> Self {
         Self::Marker(marker)
@@ -44,10 +43,12 @@ impl From<Marker> for Line {
 }
 
 impl Line {
+    /// Create a new [Line] from a [Command].
     pub fn command(command: Command) -> Self {
         Self::Command(command)
     }
 
+    /// Create a new [Line] from a string.
     pub fn parse(line_str: &str) -> Result<Self, anyhow::Error> {
         let mut pairs = Parser::parse(Rule::Line, line_str)?;
         let pair = pairs.next().expect("a pair exists");
@@ -60,7 +61,7 @@ impl Line {
 impl TryFrom<Pair<'_, Rule>> for Line {
     type Error = anyhow::Error;
 
-    fn try_from(pair: Pair<Rule>) -> Result<Self, Self::Error> {
+    fn try_from(pair: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         match pair.as_rule() {
             Rule::Line => {
                 let mut pairs = pair.into_inner();
@@ -69,7 +70,6 @@ impl TryFrom<Pair<'_, Rule>> for Line {
 
                 match pair.as_rule() {
                     Rule::Command => Command::parse(pair.as_str()).map(Self::Command),
-                    Rule::Comment => Comment::parse(pair.as_str()).map(Self::Comment),
                     Rule::Marker => Marker::parse(pair.as_str()).map(Self::Marker),
                     _ => unreachable!("Lines can't contain anything other than commands, comments, markers, or blank lines"),
                 }

@@ -1,18 +1,22 @@
+//! Script parsing and representation. Scripts are a collection of lines and blocks.
+
 pub mod block;
 pub mod command;
 pub mod comment;
 pub mod element;
 pub mod line;
 pub mod marker;
-pub mod parser;
+pub(crate) mod parser;
 
-use self::{block::Block, element::ScriptElement, line::Line};
+use self::{block::Block, element::TopLevelElement, line::Line};
+use anyhow::bail;
 use parser::{Parser, Rule};
-use pest::Parser as PestParser;
+use pest::{iterators::Pair, Parser as PestParser};
 use std::fmt;
 
+/// A collection of lines and blocks, acting as a state machine for dialogue.
 #[derive(Debug, Default)]
-pub struct Script(pub Vec<ScriptElement>);
+pub struct Script(pub Vec<TopLevelElement>);
 
 impl fmt::Display for Script {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -25,51 +29,43 @@ impl fmt::Display for Script {
 }
 
 impl Script {
+    /// Create an empty `Script`.
     pub fn empty() -> Self {
         Default::default()
     }
 
+    /// Parse a `Script` from a string.
     pub fn parse(script_str: &str) -> Result<Self, anyhow::Error> {
         let mut pairs = Parser::parse(Rule::Script, script_str)?;
-        let script = pairs.next().expect("a pair exists");
+        let pair = pairs.next().expect("a pair exists");
         assert_eq!(pairs.next(), None);
-        let inner = script
-            .into_inner()
-            .map(|pair| match pair.as_rule() {
-                Rule::Block => Block::parse(pair.as_str()).map(Into::into),
-                Rule::Line => Line::parse(pair.as_str()).map(Into::into),
-                _ => unreachable!(
-                    "Scripts can't contain anything other than blocks or lines but found {:?}",
-                    pair.as_rule()
-                ),
-            })
-            .collect::<Result<Vec<_>, _>>()?;
 
-        Ok(Self(inner))
+        pair.try_into()
     }
+}
 
-    pub fn structure_to_string(&self) -> String {
-        let mut output = String::new();
+impl TryFrom<Pair<'_, Rule>> for Script {
+    type Error = anyhow::Error;
 
-        for el in &self.0 {
-            match el {
-                ScriptElement::Block(block) => {
-                    output.push_str("block {\n");
-                    block.elements().iter().for_each(|el| {
-                        output.push_str(&format!("    {}", el));
-                    });
-                    output.push_str("}\n");
-                }
-                ScriptElement::Line(line) => {
-                    output.push_str(&format!("{}", line));
-                }
-                ScriptElement::Comment(comment) => {
-                    output.push_str(&format!("{}\n", comment));
-                }
+    fn try_from(pair: Pair<'_, Rule>) -> Result<Self, Self::Error> {
+        match pair.as_rule() {
+            Rule::Script => {
+                let inner = pair
+                    .into_inner()
+                    .map(|pair| match pair.as_rule() {
+                        Rule::Block => Block::parse(pair.as_str()).map(Into::into),
+                        Rule::Line => Line::parse(pair.as_str()).map(Into::into),
+                        _ => unreachable!(
+                        "Scripts can't contain anything other than blocks or lines but found {:?}",
+                        pair.as_rule()
+                    ),
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+
+                Ok(Self(inner))
             }
+            _ => bail!("Pair is not a script: {:#?}", pair),
         }
-
-        output
     }
 }
 
@@ -102,7 +98,6 @@ mod tests {
             .expect("example script exists");
 
         let script = Script::parse(&input).expect("a script can be parsed");
-        println!("{}", script.structure_to_string());
         // Empty lines are swallowed by the parser, so our test scripts don't have any.
         assert_eq!(input, script.to_string());
     }

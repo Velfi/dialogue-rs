@@ -1,15 +1,44 @@
+//! # Blocks
+//!
+//! Blocks are used to organize dialogue. They are indented by 4 spaces and can contain any number of lines or inner blocks. Blocks can be nested to any depth, though you should avoid nesting deeply, as it makes scripts difficult to read. The |CHOICE| and |GOTO| commands show examples of how blocks can be used. When a block is entered, dialogue will continue from the first line of the block. When a block is exited, dialogue will continue from the first line after the block.
+//!
+//! ```text
+//! %START%
+//! |SAY| 1
+//!     |SAY| 2
+//!         |SAY| 3
+//!             |SAY| 4
+//!                 |SAY| 5
+//! %END%
+//! ```
+//!
+//! is equivalent to
+//!
+//! ```text
+//! %START%
+//! |SAY| 1
+//! |SAY| 2
+//! |SAY| 3
+//! |SAY| 4
+//! |SAY| 5
+//! %END%
+//! ```
+//!
+//! Blocks should always be used to organize choices, and commands that result from a choice should be in a block after that choice.
+
 use crate::script::{
     line::Line,
     parser::{Parser, Rule},
-    ScriptElement,
+    TopLevelElement,
 };
 use anyhow::bail;
 use pest::{iterators::Pair, Parser as PestParser};
 use std::fmt;
 
+/// A block in a script, containing a collection of [top level elements](TopLevelElement).
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Block {
-    inner: Vec<ScriptElement>,
+    inner: Vec<TopLevelElement>,
 }
 
 impl fmt::Display for Block {
@@ -19,18 +48,22 @@ impl fmt::Display for Block {
 }
 
 impl Block {
-    pub fn new(inner: Vec<ScriptElement>) -> Self {
+    /// Create a new [Block] from a [Vec] of [top level elements](TopLevelElement).
+    pub fn new(inner: Vec<TopLevelElement>) -> Self {
         Self { inner }
     }
 
+    /// Create a new empty [Block].
     pub fn empty() -> Self {
         Self::new(Vec::new())
     }
 
-    pub fn elements(&self) -> &[ScriptElement] {
+    /// Get the [top level elements](TopLevelElement) in this [Block].
+    pub fn elements(&self) -> &[TopLevelElement] {
         &self.inner
     }
 
+    /// Parse a [Block] from a string.
     pub fn parse(block_str: &str) -> Result<Self, anyhow::Error> {
         let mut pairs = Parser::parse(Rule::Block, block_str)?;
         let pair = pairs.next().expect("a pair exists");
@@ -43,17 +76,18 @@ impl Block {
         pair.try_into()
     }
 
+    /// Format this [Block] with the given indentation.
     pub fn fmt_with_indent(&self, f: &mut fmt::Formatter<'_>, indent: usize) -> fmt::Result {
         for el in &self.inner {
             match el {
-                ScriptElement::Block(block) => block.fmt_with_indent(f, indent + 1)?,
-                ScriptElement::Line(line) => {
+                TopLevelElement::Block(block) => block.fmt_with_indent(f, indent + 1)?,
+                TopLevelElement::Line(line) => {
                     for _ in 0..indent {
                         write!(f, "    ")?;
                     }
                     write!(f, "{line}")?;
                 }
-                ScriptElement::Comment(comment) => {
+                TopLevelElement::Comment(comment) => {
                     for _ in 0..indent {
                         write!(f, "    ")?;
                     }
@@ -69,14 +103,14 @@ impl Block {
 impl TryFrom<Pair<'_, Rule>> for Block {
     type Error = anyhow::Error;
 
-    fn try_from(pair: Pair<Rule>) -> Result<Self, Self::Error> {
+    fn try_from(pair: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         match pair.as_rule() {
             Rule::Block => {
                 let inner = pair
                     .into_inner()
                     .map(|pair| match pair.as_rule() {
-                        Rule::Block => Block::try_from(pair).map(ScriptElement::Block),
-                        Rule::Line => Line::try_from(pair).map(ScriptElement::Line),
+                        Rule::Block => Block::try_from(pair).map(TopLevelElement::Block),
+                        Rule::Line => Line::try_from(pair).map(TopLevelElement::Line),
                         _ => unreachable!(
                             "Blocks can't contain anything other than inner blocks or lines"
                         ),
@@ -196,7 +230,7 @@ mod tests {
         |TEST| B3
 ";
         let block = Block::parse(input).unwrap();
-        print!("{:#?}", block);
+        print!("{block:#?}");
 
         let output = block.to_string();
 

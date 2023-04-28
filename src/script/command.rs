@@ -1,3 +1,9 @@
+//! # Commands
+//!
+//! Commands are written in ALL-CAPS-KEBAB-CASE and delimited by pipes. Commands can have 'prefixes' and
+//! 'suffixes'. Several built-in commands are supported, and _(in most cases)_ it's easy to extend the language with custom
+//! commands.
+
 use crate::script::parser::{Parser, Rule};
 use anyhow::bail;
 use pest::iterators::Pair;
@@ -5,6 +11,7 @@ use pest::Parser as PestParser;
 use std::borrow::Cow;
 use std::fmt;
 
+/// A command in a script.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Command {
     name: Cow<'static, str>,
@@ -29,6 +36,7 @@ impl fmt::Display for Command {
 }
 
 impl Command {
+    /// Create a new [Command].
     pub fn new<T: Into<Cow<'static, str>>>(name: T, prefix: Option<T>, suffix: Option<T>) -> Self {
         Self {
             name: name.into(),
@@ -37,6 +45,7 @@ impl Command {
         }
     }
 
+    /// Create a new [Command] from a string.
     pub fn parse(command_str: &str) -> Result<Self, anyhow::Error> {
         let mut pairs = Parser::parse(Rule::Command, command_str)?;
         let pair = pairs.next().expect("a pair exists");
@@ -49,7 +58,7 @@ impl Command {
 impl TryFrom<Pair<'_, Rule>> for Command {
     type Error = anyhow::Error;
 
-    fn try_from(pair: Pair<Rule>) -> Result<Self, Self::Error> {
+    fn try_from(pair: Pair<'_, Rule>) -> Result<Self, Self::Error> {
         match pair.as_rule() {
             Rule::Command => {
                 let inner_pairs = pair.into_inner();

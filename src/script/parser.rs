@@ -1,10 +1,12 @@
-use std::fmt;
+//! A parser for the `.script` format.
 
 use pest_derive::Parser;
+use std::fmt;
 
 #[derive(Parser)]
 #[grammar = "script.pest"]
-pub struct Parser;
+/// A parser for the `.script` format.
+pub(crate) struct Parser;
 
 impl fmt::Display for Rule {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -13,13 +15,23 @@ impl fmt::Display for Rule {
 }
 
 impl Rule {
+    /// Get the name of the rule as a string.
     pub fn as_str(&self) -> &'static str {
+        use Rule::*;
+
         match self {
-            Rule::Script => "Script",
-            Rule::Marker => "Marker",
-            Rule::Line => "Line",
-            Rule::Command => "Command",
-            _ => unimplemented!(),
+            AllowedSymbols => "AllowedSymbols",
+            Char => "Char",
+            Text => "Text",
+            Marker => "Marker",
+            MarkerName => "MarkerName",
+            Comment => "Comment",
+            Prefix => "Prefix",
+            Command => "Command",
+            CommandName => "CommandName",
+            Line => "Line",
+            Block => "Block",
+            Script => "Script",
         }
     }
 }
