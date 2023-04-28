@@ -1,3 +1,5 @@
+[crates.io] &ndash; [GitHub] &ndash; [Documentation]
+
 # Dialogue Script - A language for writing interactable dialogue
 
 Dialogue Script is a language for writing dialogue that is both human-readable and easy to parse. The
@@ -143,4 +145,10 @@ Comments start with a `//` and continue until the end of the line. They can be u
 
 ## License
 
-This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+This project is dual-licensed under the MIT and Apache 2.0 licenses. See [LICENSE-MIT]() and [LICENSE-APACHE](LICENSE-APACHE) for details.
+
+[crates.io]: https://crates.io/crates/dialogue-rs
+[GitHub]: https://github.com/Velfi/dialogue-rs
+[Documentation]: https://docs.rs/crate/dialogue-rs/latest
+[LICENSE-MIT]: https://choosealicense.com/licenses/mit
+[LICENSE-APACHE]: https://choosealicense.com/licenses/apache-2.0
