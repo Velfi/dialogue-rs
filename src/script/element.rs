@@ -18,20 +18,6 @@ impl fmt::Display for ScriptElement {
     }
 }
 
-impl ScriptElement {
-    pub fn block(block: Block) -> Self {
-        Self::Block(block)
-    }
-
-    pub fn line(line: Line) -> Self {
-        Self::Line(line)
-    }
-
-    pub fn comment(comment: Comment) -> Self {
-        Self::Comment(comment)
-    }
-}
-
 impl From<Line> for ScriptElement {
     fn from(line: Line) -> Self {
         Self::Line(line)
@@ -65,7 +51,7 @@ impl From<Command> for ScriptElement {
 #[cfg(test)]
 mod tests {
     use super::ScriptElement;
-    use crate::script_v2::{block::Block, comment::Comment, line::Line};
+    use crate::script::{block::Block, comment::Comment, line::Line};
     use pretty_assertions::assert_eq;
 
     #[test]
@@ -97,11 +83,10 @@ mod tests {
 
     #[test]
     fn test_block_round_trip_with_multiple_lines_1() {
-        let input = "    |CHOICE| do the thing
-        |CHOICE| do the other thing
-            |CHOICE| do the third thing
-    |SAY| We're back at the top level now
-    |SAY| We're still at the top level
+        let input = "    |TEST| A1
+        |TEST| B1
+            |TEST| C1
+        |TEST| B2
 ";
         let block: ScriptElement = Block::parse(input).unwrap().into();
         let actual = block.to_string();
