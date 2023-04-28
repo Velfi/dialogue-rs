@@ -1,0 +1,8 @@
+- Can this library be compiled to WASM and used in the browser?
+- Write a terminal version of a state machine for running dialogue scripts.
+- Add checks for SAY, CHOICE, and GOTO commands to ensure they're used correctly.
+- Add support for "IF" statements that can query variables from game state
+- Add support for "TRIGGER" statements that can trigger pre-defined callbacks
+- Add support for "SET" statements that can set variables in game state
+  - Numbers, strings, and booleans are supported
+- Add support for simple string templating (e.g. "Hello, ${name}!")
