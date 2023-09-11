@@ -1,0 +1,7 @@
+%START%
+|CHOICE| Choice 1
+    |SAY| Chose number 1
+|CHOICE| Choice 2
+    |SAY| Chose number 2
+|SAY|
+%END%
