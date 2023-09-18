@@ -1,5 +1,5 @@
 //! # Lines
-//! 
+//!
 //! Lines in a script are either [Markers](#Markers) or [Commands](#Commands). They can include any letters
 //! or symbols, except for pipes _(&nbsp;|&nbsp;)_, as those are used to delimit commands.
 
@@ -68,6 +68,20 @@ impl Line {
         match self {
             Self::Command(command) => Some(command),
             Self::Marker(_) => None,
+        }
+    }
+
+    pub fn expect_marker(self) -> Marker {
+        match self {
+            Self::Marker(marker) => marker,
+            Self::Command(_) => panic!("expected marker, but got command"),
+        }
+    }
+
+    pub fn expect_command(self) -> Command {
+        match self {
+            Self::Command(command) => command,
+            Self::Marker(_) => panic!("expected command, but got marker"),
         }
     }
 }

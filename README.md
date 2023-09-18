@@ -15,7 +15,7 @@ block is a transition to a sub-state.
 %END%
 ```
 
-_More example scripts are located in the `example_scripts/` directory._
+_More example scripts are located in the `example-scripts/` directory._
 
 ## Syntax
 

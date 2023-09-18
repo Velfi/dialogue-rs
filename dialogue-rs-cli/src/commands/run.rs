@@ -1,23 +1,24 @@
 use anyhow::bail;
 use dialogue_rs::{
-    script::command::Command, Script, StateMachine, CHOICE_COMMAND, GOTO_COMMAND, IF_COMMAND,
-    SAY_COMMAND, SET_COMMAND, TRIGGER_COMMAND,
+    script::command::Command, state_tree::StateTree, Script, CHOICE_COMMAND, GOTO_COMMAND,
+    IF_COMMAND, SAY_COMMAND, SET_COMMAND, TRIGGER_COMMAND,
 };
 
-pub(crate) fn run(script: &Script) -> Result<(), anyhow::Error> {
-    let mut state_machine = StateMachine::builder().script(script).build()?;
+pub(crate) fn run(script: Script) -> Result<(), anyhow::Error> {
+    let mut state_tree = StateTree::new(script);
 
     // Commands are OK to clone since they're just a references to short strings and we're displaying them
     // one-by-one.
-    while let Some(command) = state_machine.next_command()? {
+    while let Some(command) = state_tree.tick()? {
+        let command = command.expect_line().expect_command();
         match command.name() {
             SAY_COMMAND => say_command(&command)?,
-            GOTO_COMMAND => state_machine.follow_goto()?,
+            GOTO_COMMAND => state_tree.goto(command.suffix().unwrap())?,
             CHOICE_COMMAND => {
                 // TODO For choice commands, we need to collect all the choices together before
                 // displaying them and allowing the user to choose one. Then, we need to continue
                 // from the block following the chosen command.
-                choice_command(&mut state_machine)?;
+                choice_command(&mut state_tree)?;
             }
             SET_COMMAND => {
                 todo!("Handle set command");
@@ -35,9 +36,7 @@ pub(crate) fn run(script: &Script) -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-fn choice_command(
-    state_machine: &mut StateMachine<'_>,
-) -> Result<(), anyhow::Error> {
+fn choice_command(state_machine: &mut StateTree) -> Result<(), anyhow::Error> {
     // TODO We need to collect all the choices together before displaying them and allowing the
     // user to choose one. Then, we need to continue from the block following the chosen command.
     // - Display all the choices
@@ -45,9 +44,7 @@ fn choice_command(
     // - Continue from the block following the chosen command
     // - If there is no block following the chosen command, then choosing it should continue outside the current block.
 
-    let mut choices = vec![
-        state_machine.current_line_number(),
-    ];
+    let mut choices = vec![state_machine.current_line_number()];
 
     while let Some(next) = state_machine.next_command()? {
         if next.name() == CHOICE_COMMAND {
@@ -67,7 +64,12 @@ fn choice_command(
                 .unwrap()
                 .as_command()
                 .unwrap();
-            (*line_number, command.suffix().expect("all these commands are choices with suffixes"))
+            (
+                *line_number,
+                command
+                    .suffix()
+                    .expect("all these commands are choices with suffixes"),
+            )
         })
         .collect::<Vec<_>>();
 

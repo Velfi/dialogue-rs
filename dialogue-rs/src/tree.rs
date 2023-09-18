@@ -33,6 +33,15 @@ impl<T> Tree<T> {
         }
     }
 
+    /// Returns ID and data of the first branch in the tree.
+    ///
+    /// If the tree is empty, returns `None`.
+    pub fn first(&self) -> Option<(NodeId, &T)> {
+        self.branches
+            .first()
+            .map(|branch| (branch.id, &branch.data))
+    }
+
     /// Adds a branch to the tree.
     ///
     /// Returns the ID of the newly added branch.
@@ -60,14 +69,14 @@ impl<T> Tree<T> {
         id
     }
 
-    fn get_by_id(&self, id: NodeId) -> Option<&T> {
+    pub fn get_by_id(&self, id: NodeId) -> Option<&T> {
         self.branches
             .iter()
             .find(|branch| branch.id == id)
             .map(|branch| &branch.data)
     }
 
-    fn parent_id_of(&self, id: NodeId) -> Option<NodeId> {
+    pub fn parent_id_of(&self, id: NodeId) -> Option<NodeId> {
         self.child_parent_relationships
             .iter()
             .find(|(child, _)| *child == id)
@@ -77,6 +86,16 @@ impl<T> Tree<T> {
     pub fn parent_of(&self, id: NodeId) -> Option<(NodeId, &T)> {
         self.parent_id_of(id)
             .and_then(|parent_id| self.get_by_id(parent_id).map(|data| (parent_id, data)))
+    }
+
+    pub fn siblings_of(&self, id: NodeId) -> Option<impl Iterator<Item = (NodeId, &T)>> {
+        self.parent_id_of(id).map(|parent_id| {
+            self.child_parent_relationships
+                .iter()
+                .filter(move |(_, parent)| *parent == parent_id)
+                .map(|(child, _)| *child)
+                .filter_map(|sibling_id| self.get_by_id(sibling_id).map(|data| (sibling_id, data)))
+        })
     }
 
     pub fn next_sibling_of(&self, id: NodeId) -> Option<(NodeId, &T)> {
@@ -116,7 +135,8 @@ impl<T> Tree<T> {
     }
 }
 
-struct Branch<T> {
+#[derive(Clone)]
+pub struct Branch<T> {
     id: NodeId,
     data: T,
 }

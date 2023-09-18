@@ -8,11 +8,18 @@
 use crate::script::parser::Rule;
 use anyhow::bail;
 use pest::iterators::Pair;
+use std::hash::{Hash, Hasher};
 use std::{borrow::Cow, fmt};
 
 /// A marker that can be used as a destination for `GOTO` commands.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Marker(Cow<'static, str>);
+
+impl Hash for Marker {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+    }
+}
 
 impl fmt::Display for Marker {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

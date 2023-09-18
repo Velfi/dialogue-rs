@@ -1,6 +1,0 @@
-%START%
-JIMI HENDRIX |SAY| "Excuse me while I kiss the sky."
-    |CHOICE| Wait patiently.
-        |SAY| You wait patiently...
-JIMI HENDRIX |SAY| Jimi kisses the sky before turning to you and saying "Thank you for your patience."
-%END%
