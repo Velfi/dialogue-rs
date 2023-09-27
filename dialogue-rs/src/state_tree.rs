@@ -98,7 +98,18 @@ impl StateTree {
     }
 
     pub fn goto(&mut self, marker: &str) -> anyhow::Result<()> {
-        todo!()
+        let (id, _) = self
+            .tree
+            .find_by(|tle| match tle.as_ref() {
+                TopLevelElement::Line(Line::Marker(m)) => m.name() == marker,
+                _ => false,
+            })
+            .ok_or(anyhow!(
+                "state tree contained no marker with name '{marker}'"
+            ))?;
+        self.current_branch = Some(id);
+
+        Ok(())
     }
 }
 
