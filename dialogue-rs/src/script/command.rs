@@ -19,6 +19,12 @@ pub struct Command {
     suffix: Option<Cow<'static, str>>,
 }
 
+impl PartialEq<Command> for &Command {
+    fn eq(&self, other: &Command) -> bool {
+        self.name == other.name && self.prefix == other.prefix && self.suffix == other.suffix
+    }
+}
+
 impl fmt::Display for Command {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         if let Some(prefix) = &self.prefix {
@@ -67,6 +73,10 @@ impl Command {
         assert_eq!(pairs.next(), None);
 
         pair.try_into()
+    }
+
+    pub(crate) fn is_choice(&self) -> bool {
+        self.name == "CHOICE"
     }
 }
 

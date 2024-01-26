@@ -106,10 +106,6 @@ impl Block {
     pub fn iter_mut(&mut self) -> impl Iterator<Item = &mut TopLevelElement> {
         self.inner.iter_mut()
     }
-
-    pub fn into_iter(self) -> impl Iterator<Item = TopLevelElement> {
-        self.inner.into_iter()
-    }
 }
 
 impl std::iter::IntoIterator for Block {

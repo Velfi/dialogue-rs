@@ -13,8 +13,8 @@ use once_cell::sync::Lazy;
 
 pub const START_MARKER_NAME: &str = "START";
 pub const END_MARKER_NAME: &str = "END";
-pub const START_MARKER: Lazy<Marker> = Lazy::new(|| Marker::new(START_MARKER_NAME));
-pub const END_MARKER: Lazy<Marker> = Lazy::new(|| Marker::new(END_MARKER_NAME));
+pub static START_MARKER: Lazy<Marker> = Lazy::new(|| Marker::new(START_MARKER_NAME));
+pub static END_MARKER: Lazy<Marker> = Lazy::new(|| Marker::new(END_MARKER_NAME));
 
 pub fn check_syntax(script: &Script) -> Result<(), anyhow::Error> {
     check_syntax_with_options(script, &SyntaxCheckerOptions::default())
@@ -56,7 +56,9 @@ pub fn check_syntax_with_options(
             Some(TopLevelElement::Comment(_)) => {
                 continue;
             }
-            Some(TopLevelElement::Line(Line::Marker(marker))) if marker.name() == END_MARKER_NAME => {
+            Some(TopLevelElement::Line(Line::Marker(marker)))
+                if marker.name() == END_MARKER_NAME =>
+            {
                 bail!(
                     "Scripts must contain at least one command between the {START_MARKER_NAME} and {END_MARKER_NAME} markers."
                 );
@@ -65,7 +67,9 @@ pub fn check_syntax_with_options(
                 let marker_name = marker.name();
                 bail!("Marker {marker_name} shouldn't immediately follow the {START_MARKER_NAME} marker.");
             }
-            None => bail!("The {START_MARKER_NAME} marker should be followed by at least one command"),
+            None => {
+                bail!("The {START_MARKER_NAME} marker should be followed by at least one command")
+            }
             _ => break,
         }
     }
@@ -94,9 +98,9 @@ fn check_syntax_of_pairwise_elements<'a, 'b>(
         match current {
             TopLevelElement::Line(Line::Command(command)) => {
                 check_command(
-                    &command,
+                    command,
                     match next {
-                        TopLevelElement::Block(block) => Some(&block),
+                        TopLevelElement::Block(block) => Some(block),
                         TopLevelElement::Line(_) | TopLevelElement::Comment(_) => None,
                     },
                     options,
@@ -109,7 +113,7 @@ fn check_syntax_of_pairwise_elements<'a, 'b>(
                 markers_seen.push(marker.clone());
             }
             TopLevelElement::Block(block) => {
-                check_block(&block, markers_seen, options)?;
+                check_block(block, markers_seen, options)?;
             }
             TopLevelElement::Comment(_) => {
                 // Comments are allowed anywhere
@@ -129,13 +133,12 @@ mod tests {
     #[should_panic = "Script is empty. Valid scripts must have START and END markers, and at least one command."]
     fn test_syntax_of_empty_script_is_invalid() {
         let script = Script(vec![]);
-        let _ = check_syntax(&script).unwrap();
+        check_syntax(&script).unwrap();
     }
 
     #[test]
     fn test_syntax_of_example_script_is_valid_1() {
-        let input = std::fs::read_to_string("../example-
-        scripts/capital-of-spain.script")
+        let input = std::fs::read_to_string("../example-scripts/capital-of-spain.script")
             .expect("example script exists");
 
         let script = Script::parse(&input).expect("a script can be parsed");
@@ -144,8 +147,7 @@ mod tests {
 
     #[test]
     fn test_syntax_of_example_script_is_valid_2() {
-        let input = std::fs::read_to_string("../example-
-        scripts/daisy-and-luigi.script")
+        let input = std::fs::read_to_string("../example-scripts/daisy-and-luigi.script")
             .expect("example script exists");
 
         let script = Script::parse(&input).expect("a script can be parsed");
@@ -154,8 +156,7 @@ mod tests {
 
     #[test]
     fn test_syntax_of_example_script_is_valid_3() {
-        let input = std::fs::read_to_string("../example-
-        scripts/jimi.script")
+        let input = std::fs::read_to_string("../example-scripts/jimi.script")
             .expect("example script exists");
 
         let script = Script::parse(&input).expect("a script can be parsed");
@@ -164,8 +165,7 @@ mod tests {
 
     #[test]
     fn test_syntax_of_example_script_is_valid_4() {
-        let input = std::fs::read_to_string("../example-
-        scripts/three-line.script")
+        let input = std::fs::read_to_string("../example-scripts/three-line.script")
             .expect("example script exists");
 
         let script = Script::parse(&input).expect("a script can be parsed");
@@ -174,8 +174,7 @@ mod tests {
 
     #[test]
     fn test_syntax_of_example_script_is_valid_5() {
-        let input = std::fs::read_to_string("../example-
-        scripts/two-line.script")
+        let input = std::fs::read_to_string("../example-scripts/two-line.script")
             .expect("example script exists");
 
         let script = Script::parse(&input).expect("a script can be parsed");

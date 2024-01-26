@@ -3,14 +3,17 @@ STANDARDIZED TEST |SAY| What is the capital of Spain?
     |CHOICE| A: Barcelona
         YOU |SAY| The capital of Spain is Barcelona
         STANDARDIZED TEST |SAY| Incorrect!
+        |GOTO| %START%
     |CHOICE| B: Madrid
         YOU |SAY| The capital of Spain is Madrid
         STANDARDIZED TEST |SAY| Correct!
     |CHOICE| C: Bilbao
         YOU |SAY| The capital of Spain is Bilbao
         STANDARDIZED TEST |SAY| Incorrect!
+        |GOTO| %START%
     |CHOICE| D: Seville
         YOU |SAY| The capital of Spain is Seville
         STANDARDIZED TEST |SAY| Incorrect!
+        |GOTO| %START%
 STANDARDIZED TEST |SAY| Thank you for taking the test.
 %END%
